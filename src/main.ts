@@ -1,8 +1,19 @@
-import './style.css'
-import './reset.css'
-import './index.css'
+import "./style.css";
+import "./reset.css";
+import "./index.css";
 
-let state = {
+type StoreItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+type state = {
+  storeItem: StoreItem[];
+};
+
+let state: state = {
   storeItem: [
     { id: 1, name: "beetroot", price: 0.35, quantity: 0 },
     { id: 2, name: "carrot", price: 0.25, quantity: 0 },
@@ -16,95 +27,112 @@ let state = {
     { id: 10, name: "eggplant", price: 0.35, quantity: 0 },
   ],
 };
-let storeItemList = document.querySelector(".store--item-list");
-let shoppingCartList = document.querySelector(".cart--item-list");
-let shoppingPrice = document.querySelector(".total-number");
-let shoppingItemQuantity = document.querySelector(".quantity-text");
+let storeItemList =
+  document.querySelector<HTMLUListElement>(".store--item-list");
+let shoppingCartList =
+  document.querySelector<HTMLUListElement>(".cart--item-list");
+let shoppingPrice = document.querySelector<HTMLUListElement>(".total-number");
+
+function imgageSrcItem(item: StoreItem) {
+  return (
+    "./assets/icons/" + `${item.id}`.padStart(3, "0") + `-${item.name}.svg`
+  );
+}
+
+function decreaseQuantity(item: StoreItem) {
+  item.quantity--;
+}
+
+function increaseQuantity(item: StoreItem) {
+  item.quantity++;
+}
+
+function shoppingItem() {
+  return state.storeItem.filter((item) => item.quantity > 0);
+}
 
 function rederStoreItem() {
-  for (let i = 0; i < state.storeItem.length; i++) {
+  if (storeItemList) storeItemList.textContent = "";
+
+  for (let item of state.storeItem) {
     let listItem = document.createElement("li");
     let iconItem = document.createElement("div");
     iconItem.className = "store--item-icon";
+
     let imgageItem = document.createElement("img");
-    imgageItem.src =
-      "./assets/icons/" +
-      `${state.storeItem[i].id}`.padStart(3, "0") +
-      `-${state.storeItem[i].name}.svg`;
-    imgageItem.alt = state.storeItem[i].name;
+    imgageItem.src = imgageSrcItem(item);
+    imgageItem.alt = item.name;
+
     iconItem.append(imgageItem);
+
     let buttonItem = document.createElement("button");
     buttonItem.textContent = "Add to cart";
-    let clickedButtonItem=false
     buttonItem.addEventListener("click", function () {
-      if(!clickedButtonItem){
-      state.storeItem[i].quantity += 1;
-      renderShoppingItem(i);
-      totalPrice();
-      }
-     clickedButtonItem=true
-       
+      increaseQuantity(item);
+      render();
     });
+
     listItem.append(iconItem, buttonItem);
-    storeItemList.append(listItem);
+    if (storeItemList) storeItemList.append(listItem);
   }
 }
 
-function renderShoppingItem(j) {
-  let total = 0;
-  let shoppingCartItem = document.createElement("li");
-  let itemImage = document.createElement("img");
-  itemImage.className = "cart--item-icon";
-  itemImage.src =
-    "./assets/icons/" +
-    `${state.storeItem[j].id}`.padStart(3, "0") +
-    `-${state.storeItem[j].name}.svg`;
+function renderShoppingItem() {
+  if (shoppingCartList) shoppingCartList.textContent = "";
 
-  itemImage.alt = state.storeItem[j].name;
-  shoppingCartItem.append(itemImage);
-  let itemName = document.createElement("p");
-  itemName.textContent = state.storeItem[j].name;
-  shoppingCartItem.append(itemName);
-  let decreaseItemQuantity = document.createElement("button");
-  decreaseItemQuantity.className = "quantity-btn remove-btn center";
-  decreaseItemQuantity.textContent = "-";
-  decreaseItemQuantity.addEventListener("click", function () {
-    itemQuantity.textContent = parseInt(itemQuantity.textContent) - 1;
-    if (itemQuantity.textContent === "0") shoppingCartItem.remove();
-    state.storeItem[j].quantity = parseInt(itemQuantity.textContent);
-    let itemPrice = state.storeItem[j].price * state.storeItem[j].quantity;
-    total -= itemPrice;
-    shoppingPrice.textContent = total.toFixed(2);
-    totalPrice();
-  });
-  shoppingCartItem.append(decreaseItemQuantity);
-  let itemQuantity = document.createElement("span");
-  itemQuantity.className = "quantity-text center";
-  itemQuantity.textContent = "1";
-  shoppingCartItem.append(itemQuantity);
-  let increaseItemQuantity = document.createElement("button");
-  increaseItemQuantity.className = "quantity-btn add-btn center";
-  increaseItemQuantity.textContent = "+";
-  increaseItemQuantity.addEventListener("click", function () {
-    itemQuantity.textContent = parseInt(itemQuantity.textContent) + 1;
-    state.storeItem[j].quantity = parseInt(itemQuantity.textContent);
-    totalPrice();
-  });
-  shoppingCartItem.append(increaseItemQuantity);
-  shoppingCartList.append(shoppingCartItem);
+  for (let item of shoppingItem()) {
+    let shoppingCartItem = document.createElement("li");
+
+    let itemImage = document.createElement("img");
+    itemImage.className = "cart--item-icon";
+    itemImage.src = imgageSrcItem(item);
+    itemImage.alt = item.name;
+
+    let itemName = document.createElement("p");
+    itemName.textContent = item.name;
+
+    let decreaseItemQuantity = document.createElement("button");
+    decreaseItemQuantity.className = "quantity-btn remove-btn center";
+    decreaseItemQuantity.textContent = "-";
+    decreaseItemQuantity.addEventListener("click", function () {
+      decreaseQuantity(item);
+      render();
+    });
+
+    let itemQuantity = document.createElement("span");
+    itemQuantity.className = "quantity-text center";
+    itemQuantity.textContent = String(item.quantity);
+
+    let increaseItemQuantity = document.createElement("button");
+    increaseItemQuantity.className = "quantity-btn add-btn center";
+    increaseItemQuantity.textContent = "+";
+    increaseItemQuantity.addEventListener("click", function () {
+      increaseQuantity(item);
+      render();
+    });
+
+    shoppingCartItem.append(
+      itemImage,
+      itemName,
+      decreaseItemQuantity,
+      itemQuantity,
+      increaseItemQuantity
+    );
+    if (shoppingCartList) shoppingCartList.append(shoppingCartItem);
+  }
 }
 
 function totalPrice() {
   let total = 0;
-
-  for (let i = 0; i < state.storeItem.length; i++) {
-    total += state.storeItem[i].price * state.storeItem[i].quantity;
+  for (let item of shoppingItem()) {
+    let itemtotal = item.price * item.quantity;
+    total += itemtotal;
   }
-
   shoppingPrice.textContent = total.toFixed(2);
 }
-
 function render() {
   rederStoreItem();
+  renderShoppingItem();
+  totalPrice();
 }
 render();
